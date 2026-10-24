@@ -1,0 +1,30 @@
+FREELANCER INVOICE & EXPENSE KIT: QUICK START
+
+1. Save "invoice-kit.html" somewhere permanent (for example, Documents).
+   Always open it from the same place and in the same browser, because your
+   data is stored by the browser for that file location.
+
+2. Double-click the file. It opens in your browser.
+
+3. Go to Settings and enter your business name, address, currency
+   (e.g. USD, EUR, GBP, INR), tax label and rate, and payment details.
+   Upload your logo if you have one.
+
+4. Add your clients under Clients.
+
+5. Under Invoices, click "+ New invoice", add line items, and Save.
+   Click "PDF" (or "Preview / PDF") and choose "Save as PDF" as the
+   printer to get a PDF to email your client.
+
+6. When you're paid, click "Mark paid". Sent invoices past their due date
+   are flagged as overdue automatically.
+
+7. Log business costs under Expenses. Use "Export CSV" at year end.
+
+BACK UP YOUR DATA
+Settings → "Export backup" saves everything to a .json file. Do this
+regularly. Clearing your browser history/site data will erase the app's
+data. To move to a new computer, export there and import here.
+
+Want to look around first? On the Dashboard, click "load sample data".
+Use "Erase all data" in Settings when you're ready to start for real.

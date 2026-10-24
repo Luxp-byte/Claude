@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Freelancer Invoice &amp; Expense Kit</title>
+<!--
+  Freelancer Invoice & Expense Kit
+  Copyright (c) YEAR YOUR NAME. All rights reserved.
+  Licensed to the purchaser under the terms in LICENSE.txt.
+  Redistribution or resale of this file is prohibited.
+-->
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--text:#1b1f24;--muted:#5d6670;--line:#e3e6ea;--accent:#2f6fed;--accent-ink:#fff;--good:#1e8e5a;--warn:#b7791f;--bad:#c53030;--chip:#eef1f5}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--panel:#1b1e23;--text:#e8eaed;--muted:#9aa3ad;--line:#2c3138;--accent:#5b8df7;--accent-ink:#0b0d10;--good:#48bb78;--warn:#ecc94b;--bad:#fc8181;--chip:#262a31}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;font-weight:650}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:0;padding:8px 12px;border-radius:8px;color:var(--muted);cursor:pointer;font:inherit}
+nav button.on{background:var(--chip);color:var(--text);font-weight:600}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.row>*{flex:1 1 160px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+textarea{min-height:70px;resize:vertical}
+button.btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;font:inherit;white-space:nowrap}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.danger{color:var(--bad)}
+button.link{background:none;border:0;color:var(--accent);cursor:pointer;padding:0 6px;font:inherit}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--chip)}
+.pill.paid{color:var(--good)}.pill.sent{color:var(--accent)}.pill.overdue{color:var(--bad)}.pill.draft{color:var(--muted)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.head h2{margin:0;font-size:20px}
+.muted{color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.totals{margin-left:auto;max-width:320px}
+.totals div{display:flex;justify-content:space-between;padding:4px 0}
+.totals .grand{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:700;font-size:18px}
+.items input{padding:6px 8px}
+.scroll{overflow-x:auto}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+#toast.show{opacity:1}
+#print{display:none}
+/* Printable invoice */
+.inv{color:#111;background:#fff;font-size:13px;padding:8px}
+.inv .top{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}
+.inv h2{font-size:28px;margin:0 0 4px;letter-spacing:.02em}
+.inv img{max-height:70px;max-width:220px;margin-bottom:8px}
+.inv .parties{display:flex;justify-content:space-between;gap:24px;margin-bottom:24px}
+.inv .lbl{font-size:11px;text-transform:uppercase;color:#666;letter-spacing:.05em;margin-bottom:2px}
+.inv table th{color:#555;border-bottom:2px solid #111}
+.inv table td{border-bottom:1px solid #ddd}
+.inv .totals{margin-top:12px}
+.inv .notes{margin-top:28px;white-space:pre-wrap}
+.pre{white-space:pre-wrap}
+@media print{
+  body{background:#fff}
+  header,main,#toast{display:none!important}
+  #print{display:block}
+  @page{margin:14mm}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Invoice &amp; Expense Kit</h1>
+  <nav id="nav">
+    <button data-view="dashboard">Dashboard</button>
+    <button data-view="invoices">Invoices</button>
+    <button data-view="clients">Clients</button>
+    <button data-view="expenses">Expenses</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+</header>
+<main id="main"></main>
+<div id="print"></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const KEY = 'invoice-kit-data-v1';
+const DEFAULTS = {
+  settings: {name:'', address:'', email:'', phone:'', taxId:'', currency:'USD', taxRate:0, taxLabel:'Tax',
+             prefix:'INV-', nextNo:1, terms:14, notes:'Thank you for your business.', payment:'', logo:''},
+  clients: [], invoices: [], expenses: []
+};
+const EXPENSE_CATS = ['Software','Hardware','Office','Travel','Meals','Marketing','Education','Fees','Contractors','Other'];
+
+let db = load();
+let view = 'dashboard';
+let draft = null;          // invoice being edited
+let expYear = String(new Date().getFullYear());
+
+/* ---------- storage ---------- */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d) return {...clone(DEFAULTS), ...d, settings:{...DEFAULTS.settings, ...d.settings}};
+  }catch(e){}
+  return clone(DEFAULTS);
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch(e){ toast('Could not save (browser storage full or blocked). Export a backup now.'); }
+}
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const today = () => new Date().toISOString().slice(0,10);
+function addDays(iso, n){ const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+Number(n||0)); return d.toISOString().slice(0,10); }
+function money(n, cur){
+  cur = cur || db.settings.currency || 'USD';
+  try{ return new Intl.NumberFormat(undefined,{style:'currency',currency:cur}).format(n); }
+  catch(e){ return cur + ' ' + n.toFixed(2); }
+}
+function fmtDate(iso){ return iso ? new Date(iso+'T00:00:00').toLocaleDateString() : ''; }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),2600); }
+function client(id){ return db.clients.find(c=>c.id===id); }
+function totals(inv){
+  const sub = inv.items.reduce((s,i)=>s+num(i.qty)*num(i.rate),0);
+  const disc = Math.min(num(inv.discount), sub);
+  const tax = (sub-disc) * num(inv.taxRate)/100;
+  return {sub, disc, tax, total: sub-disc+tax};
+}
+function status(inv){ return inv.status==='sent' && inv.due && inv.due < today() ? 'overdue' : inv.status; }
+function download(name, text, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text],{type}));
+  a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function csv(rows){ return rows.map(r=>r.map(v=>{ v=String(v??''); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')).join('\n'); }
+
+/* ---------- views ---------- */
+function go(v){ view=v; if(v!=='editor') draft=null; render(); window.scrollTo(0,0); }
+function render(){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===(view==='editor'?'invoices':view)));
+  $('#main').innerHTML = ({dashboard, invoices, clients, expenses, settings, editor})[view]();
+  if(view==='editor') updateTotals();
+}
+
+function dashboard(){
+  const yr = String(new Date().getFullYear());
+  const invs = db.invoices.filter(i=>(i.issue||'').startsWith(yr));
+  const sum = arr => arr.reduce((s,i)=>s+totals(i).total,0);
+  const paid = sum(invs.filter(i=>i.status==='paid'));
+  const outstanding = sum(db.invoices.filter(i=>i.status==='sent'));
+  const overdue = db.invoices.filter(i=>status(i)==='overdue');
+  const exp = db.expenses.filter(e=>(e.date||'').startsWith(yr)).reduce((s,e)=>s+num(e.amount),0);
+  const setupNeeded = !db.settings.name;
+  return `
+  ${setupNeeded ? `<div class="card"><b>Welcome!</b> Start by adding your business details in
+    <button class="link" data-go="settings">Settings</button>, or
+    <button class="link" data-act="demo">load sample data</button> to explore.</div>` : ''}
+  <div class="stats">
+    <div class="stat"><span>Paid in ${yr}</span><b>${money(paid)}</b></div>
+    <div class="stat"><span>Outstanding</span><b>${money(outstanding)}</b></div>
+    <div class="stat"><span>Overdue invoices</span><b style="color:${overdue.length?'var(--bad)':'inherit'}">${overdue.length}</b></div>
+    <div class="stat"><span>Expenses in ${yr}</span><b>${money(exp)}</b></div>
+    <div class="stat"><span>Net (paid − expenses)</span><b>${money(paid-exp)}</b></div>
+  </div>
+  <div class="card">
+    <div class="head"><h2>Recent invoices</h2><button class="btn primary" data-act="new-inv">+ New invoice</button></div>
+    ${invoiceTable(db.invoices.slice().sort((a,b)=>(b.issue||'').localeCompare(a.issue||'')).slice(0,6))}
+  </div>`;
+}
+
+function invoiceTable(list){
+  if(!list.length) return `<div class="empty">No invoices yet.</div>`;
+  return `<div class="scroll"><table><thead><tr><th>Number</th><th>Client</th><th>Issued</th><th>Due</th><th>Status</th><th class="num">Total</th><th></th></tr></thead><tbody>
+  ${list.map(i=>{ const st=status(i); return `<tr>
+    <td><button class="link" data-act="edit-inv" data-id="${i.id}">${esc(i.number)}</button></td>
+    <td>${esc(client(i.clientId)?.name || '—')}</td>
+    <td>${fmtDate(i.issue)}</td><td>${fmtDate(i.due)}</td>
+    <td><span class="pill ${st}">${st}</span></td>
+    <td class="num">${money(totals(i).total, i.currency)}</td>
+    <td class="num">
+      ${i.status!=='paid'?`<button class="link" data-act="mark-paid" data-id="${i.id}">Mark paid</button>`:''}
+      <button class="link" data-act="print-inv" data-id="${i.id}">PDF</button>
+    </td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+
+function invoices(){
+  const list = db.invoices.slice().sort((a,b)=>(b.issue||'').localeCompare(a.issue||''));
+  return `<div class="card">
+    <div class="head"><h2>Invoices</h2>
+      <div class="row" style="flex:0 0 auto">
+        <button class="btn" data-act="csv-inv">Export CSV</button>
+        <button class="btn primary" data-act="new-inv">+ New invoice</button>
+      </div></div>
+    ${invoiceTable(list)}
+  </div>`;
+}
+
+function editor(){
+  const d = draft, s = db.settings;
+  return `<div class="card">
+    <div class="head"><h2>${d.id ? 'Edit' : 'New'} invoice</h2>
+      <div class="row" style="flex:0 0 auto">
+        ${d.id?`<button class="btn danger" data-act="del-inv">Delete</button><button class="btn" data-act="dup-inv">Duplicate</button>`:''}
+        <button class="btn" data-act="preview">Preview / PDF</button>
+        <button class="btn" data-go="invoices">Cancel</button>
+        <button class="btn primary" data-act="save-inv">Save</button>
+      </div></div>
+    <div class="row">
+      <div><label>Invoice number</label><input data-f="number" value="${esc(d.number)}"></div>
+      <div><label>Client</label><select data-f="clientId">
+        <option value="">— Select client —</option>
+        ${db.clients.map(c=>`<option value="${c.id}" ${c.id===d.clientId?'selected':''}>${esc(c.name)}</option>`).join('')}
+      </select></div>
+      <div><label>Status</label><select data-f="status">
+        ${['draft','sent','paid'].map(x=>`<option ${x===d.status?'selected':''}>${x}</option>`).join('')}
+      </select></div>
+    </div>
+    ${db.clients.length?'':`<p class="muted">No clients yet — <button class="link" data-go="clients">add one</button> (unsaved changes here will be lost).</p>`}
+    <div class="row" style="margin-top:12px">
+      <div><label>Issue date</label><input type="date" data-f="issue" value="${esc(d.issue)}"></div>
+      <div><label>Due date</label><input type="date" data-f="due" value="${esc(d.due)}"></div>
+      <div><label>Currency (ISO code)</label><input data-f="currency" value="${esc(d.currency)}" maxlength="3"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="scroll"><table class="items"><thead><tr><th style="width:55%">Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th><th></th></tr></thead>
+    <tbody id="items">${itemRows()}</tbody></table></div>
+    <button class="btn" style="margin-top:10px" data-act="add-item">+ Add line</button>
+    <div class="row" style="margin-top:16px">
+      <div><label>Discount (amount)</label><input type="number" step="0.01" min="0" data-f="discount" value="${esc(d.discount)}"></div>
+      <div><label>${esc(s.taxLabel||'Tax')} rate (%)</label><input type="number" step="0.01" min="0" data-f="taxRate" value="${esc(d.taxRate)}"></div>
+      <div class="totals" id="totals"></div>
+    </div>
+  </div>
+  <div class="card"><label>Notes shown on invoice</label><textarea data-f="notes">${esc(d.notes)}</textarea></div>`;
+}
+function itemRows(){
+  return draft.items.map((it,ix)=>`<tr>
+    <td><input data-i="${ix}" data-k="desc" value="${esc(it.desc)}" placeholder="e.g. Website design"></td>
+    <td><input type="number" step="any" data-i="${ix}" data-k="qty" value="${esc(it.qty)}" style="text-align:right;min-width:70px"></td>
+    <td><input type="number" step="0.01" data-i="${ix}" data-k="rate" value="${esc(it.rate)}" style="text-align:right;min-width:90px"></td>
+    <td class="num" id="amt${ix}">${money(num(it.qty)*num(it.rate), draft.currency)}</td>
+    <td><button class="link danger" data-act="rm-item" data-i="${ix}" title="Remove">✕</button></td></tr>`).join('');
+}
+function updateTotals(){
+  const t = totals(draft), c = draft.currency;
+  draft.items.forEach((it,ix)=>{ const el=$('#amt'+ix); if(el) el.textContent = money(num(it.qty)*num(it.rate), c); });
+  $('#totals').innerHTML = `<div><span>Subtotal</span><span>${money(t.sub,c)}</span></div>
+    ${t.disc?`<div><span>Discount</span><span>−${money(t.disc,c)}</span></div>`:''}
+    ${t.tax?`<div><span>${esc(db.settings.taxLabel||'Tax')} (${num(draft.taxRate)}%)</span><span>${money(t.tax,c)}</span></div>`:''}
+    <div class="grand"><span>Total</span><span>${money(t.total,c)}</span></div>`;
+}
+
+function clients(){
+  return `<div class="card"><div class="head"><h2>Add client</h2></div>
+    <form id="client-form" class="row">
+      <div><label>Name *</label><input name="name" required></div>
+      <div><label>Email</label><input name="email" type="email"></div>
+      <div style="flex-basis:260px"><label>Address</label><input name="address"></div>
+      <button class="btn primary" style="flex:0 0 auto">Add</button>
+    </form></div>
+  <div class="card"><div class="head"><h2>Clients</h2></div>
+  ${db.clients.length ? `<div class="scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Address</th><th class="num">Billed</th><th></th></tr></thead><tbody>
+    ${db.clients.map(c=>{ const billed=db.invoices.filter(i=>i.clientId===c.id).reduce((s,i)=>s+totals(i).total,0);
+      return `<tr><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td class="pre">${esc(c.address)}</td>
+      <td class="num">${money(billed)}</td>
+      <td class="num"><button class="link" data-act="edit-client" data-id="${c.id}">Edit</button><button class="link danger" data-act="del-client" data-id="${c.id}">Delete</button></td></tr>`; }).join('')}
+  </tbody></table></div>` : `<div class="empty">No clients yet.</div>`}</div>`;
+}
+
+function expenses(){
+  const years = [...new Set([String(new Date().getFullYear()), ...db.expenses.map(e=>(e.date||'').slice(0,4))])].filter(Boolean).sort().reverse();
+  const list = db.expenses.filter(e=>(e.date||'').startsWith(expYear)).sort((a,b)=>b.date.localeCompare(a.date));
+  const byCat = {};
+  list.forEach(e=>byCat[e.category]=(byCat[e.category]||0)+num(e.amount));
+  const total = list.reduce((s,e)=>s+num(e.amount),0);
+  return `<div class="card"><div class="head"><h2>Add expense</h2></div>
+    <form id="exp-form" class="row">
+      <div><label>Date</label><input name="date" type="date" value="${today()}" required></div>
+      <div><label>Category</label><input name="category" list="cats" value="Software" required>
+        <datalist id="cats">${EXPENSE_CATS.map(c=>`<option>${c}</option>`).join('')}</datalist></div>
+      <div style="flex-basis:240px"><label>Description</label><input name="desc"></div>
+      <div><label>Amount</label><input name="amount" type="number" step="0.01" min="0" required></div>
+      <button class="btn primary" style="flex:0 0 auto">Add</button>
+    </form></div>
+  <div class="card"><div class="head"><h2>Expenses</h2>
+    <div class="row" style="flex:0 0 auto">
+      <select id="exp-year" style="width:auto">${years.map(y=>`<option ${y===expYear?'selected':''}>${y}</option>`).join('')}</select>
+      <button class="btn" data-act="csv-exp">Export CSV</button></div></div>
+    ${Object.keys(byCat).length?`<p class="muted">${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${esc(k)}: <b>${money(v)}</b>`).join(' · ')} — Total <b>${money(total)}</b></p>`:''}
+    ${list.length?`<div class="scroll"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="num">Amount</th><th></th></tr></thead><tbody>
+      ${list.map(e=>`<tr><td>${fmtDate(e.date)}</td><td>${esc(e.category)}</td><td>${esc(e.desc)}</td><td class="num">${money(num(e.amount))}</td>
+      <td class="num"><button class="link danger" data-act="del-exp" data-id="${e.id}">Delete</button></td></tr>`).join('')}
+    </tbody></table></div>`:`<div class="empty">No expenses for ${esc(expYear)}.</div>`}</div>`;
+}
+
+function settings(){
+  const s = db.settings;
+  const f = (k,l,t='text') => `<div><label>${l}</label><input name="${k}" type="${t}" ${t==='number'?'step="any"':''} value="${esc(s[k])}"></div>`;
+  return `<form id="settings-form">
+  <div class="card"><div class="head"><h2>Your business</h2></div>
+    <div class="row">${f('name','Business / your name')}${f('email','Email','email')}${f('phone','Phone')}</div>
+    <div class="row" style="margin-top:12px">
+      <div style="flex-basis:320px"><label>Address</label><textarea name="address">${esc(s.address)}</textarea></div>
+      <div><label>Tax / VAT / GST ID (optional)</label><input name="taxId" value="${esc(s.taxId)}">
+        <label style="margin-top:12px">Logo (PNG/JPG, under 300 KB)</label><input type="file" id="logo" accept="image/png,image/jpeg">
+        ${s.logo?`<div style="margin-top:8px"><img src="${s.logo}" style="max-height:48px"> <button type="button" class="link danger" data-act="rm-logo">Remove</button></div>`:''}
+      </div>
+    </div></div>
+  <div class="card"><div class="head"><h2>Invoice defaults</h2></div>
+    <div class="row">${f('currency','Currency (ISO code, e.g. USD, EUR, INR)')}${f('taxLabel','Tax label (e.g. VAT, GST)')}${f('taxRate','Default tax rate %','number')}</div>
+    <div class="row" style="margin-top:12px">${f('prefix','Number prefix')}${f('nextNo','Next number','number')}${f('terms','Payment terms (days)','number')}</div>
+    <div class="row" style="margin-top:12px">
+      <div><label>Default notes</label><textarea name="notes">${esc(s.notes)}</textarea></div>
+      <div><label>Payment instructions (bank, PayPal, UPI…)</label><textarea name="payment">${esc(s.payment)}</textarea></div>
+    </div>
+    <div style="margin-top:14px"><button class="btn primary">Save settings</button></div></div>
+  </form>
+  <div class="card"><div class="head"><h2>Backup &amp; data</h2></div>
+    <p class="muted">Your data is stored only in this browser on this device. Nothing is uploaded anywhere.
+      Export a backup regularly — clearing browser data will erase it.</p>
+    <div class="row" style="justify-content:flex-start">
+      <button class="btn" style="flex:0 0 auto" data-act="backup">Export backup (.json)</button>
+      <button class="btn" style="flex:0 0 auto" data-act="restore">Import backup</button>
+      <button class="btn danger" style="flex:0 0 auto" data-act="reset">Erase all data</button>
+      <input type="file" id="restore-file" accept="application/json" hidden>
+    </div></div>`;
+}
+
+/* ---------- printable invoice ---------- */
+function invoiceHTML(inv){
+  const s = db.settings, c = client(inv.clientId) || {}, t = totals(inv), cur = inv.currency;
+  return `<div class="inv">
+    <div class="top">
+      <div>${s.logo?`<img src="${s.logo}" alt="">`:''}
+        <div><b>${esc(s.name)}</b></div><div class="pre">${esc(s.address)}</div>
+        <div>${esc(s.email)}${s.phone?' · '+esc(s.phone):''}</div>
+        ${s.taxId?`<div>${esc(s.taxLabel||'Tax')} ID: ${esc(s.taxId)}</div>`:''}</div>
+      <div style="text-align:right"><h2>INVOICE</h2>
+        <div><b>${esc(inv.number)}</b></div>
+        <div>Issued: ${fmtDate(inv.issue)}</div><div>Due: ${fmtDate(inv.due)}</div>
+        ${inv.status==='paid'?'<div style="color:#1e8e5a;font-weight:700;margin-top:6px">PAID</div>':''}</div>
+    </div>
+    <div class="parties"><div><div class="lbl">Bill to</div><b>${esc(c.name||'')}</b><div class="pre">${esc(c.address||'')}</div><div>${esc(c.email||'')}</div></div>
+      <div style="text-align:right"><div class="lbl">Amount due</div><div style="font-size:22px;font-weight:700">${money(inv.status==='paid'?0:t.total,cur)}</div></div></div>
+    <table><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>
+      ${inv.items.filter(i=>i.desc||num(i.rate)).map(i=>`<tr><td>${esc(i.desc)}</td><td class="num">${num(i.qty)}</td><td class="num">${money(num(i.rate),cur)}</td><td class="num">${money(num(i.qty)*num(i.rate),cur)}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="totals"><div><span>Subtotal</span><span>${money(t.sub,cur)}</span></div>
+      ${t.disc?`<div><span>Discount</span><span>−${money(t.disc,cur)}</span></div>`:''}
+      ${t.tax?`<div><span>${esc(s.taxLabel||'Tax')} (${num(inv.taxRate)}%)</span><span>${money(t.tax,cur)}</span></div>`:''}
+      <div class="grand"><span>Total</span><span>${money(t.total,cur)}</span></div></div>
+    ${s.payment?`<div class="notes"><div class="lbl">Payment details</div>${esc(s.payment)}</div>`:''}
+    ${inv.notes?`<div class="notes">${esc(inv.notes)}</div>`:''}
+  </div>`;
+}
+function printInvoice(inv){
+  $('#print').innerHTML = invoiceHTML(inv);
+  const old = document.title;
+  document.title = inv.number + (client(inv.clientId) ? ' - ' + client(inv.clientId).name : '');
+  window.print();
+  document.title = old;
+}
+
+/* ---------- actions ---------- */
+function newInvoice(){
+  const s = db.settings;
+  draft = {id:null, number: s.prefix + String(s.nextNo).padStart(4,'0'), clientId: db.clients[0]?.id || '',
+    issue: today(), due: addDays(today(), s.terms), items:[{desc:'',qty:1,rate:0}],
+    taxRate: s.taxRate, discount: 0, notes: s.notes, status:'draft', currency: s.currency};
+  view='editor'; render();
+}
+function saveDraft(){
+  if(!draft.number.trim()) return toast('Invoice number is required.');
+  if(db.invoices.some(i=>i.number===draft.number && i.id!==draft.id)) return toast('That invoice number is already used.');
+  draft.currency = (draft.currency||'USD').toUpperCase();
+  if(draft.id){ db.invoices[db.invoices.findIndex(i=>i.id===draft.id)] = clone(draft); }
+  else { draft.id = uid(); db.invoices.push(clone(draft)); db.settings.nextNo = num(db.settings.nextNo) + 1; }
+  save(); toast('Invoice saved.'); go('invoices');
+}
+
+const actions = {
+  'new-inv': newInvoice,
+  'edit-inv': id => { draft = clone(db.invoices.find(i=>i.id===id)); view='editor'; render(); },
+  'mark-paid': id => { db.invoices.find(i=>i.id===id).status='paid'; save(); render(); toast('Marked as paid.'); },
+  'print-inv': id => printInvoice(db.invoices.find(i=>i.id===id)),
+  'save-inv': saveDraft,
+  'preview': () => printInvoice(draft),
+  'dup-inv': () => { const s=db.settings; draft = {...clone(draft), id:null, number:s.prefix+String(s.nextNo).padStart(4,'0'), issue:today(), due:addDays(today(),s.terms), status:'draft'}; render(); toast('Duplicated — edit and save.'); },
+  'del-inv': () => { if(confirm('Delete invoice '+draft.number+'?')){ db.invoices=db.invoices.filter(i=>i.id!==draft.id); save(); go('invoices'); } },
+  'add-item': () => { draft.items.push({desc:'',qty:1,rate:0}); $('#items').innerHTML=itemRows(); updateTotals(); },
+  'rm-item': (id, el) => { draft.items.splice(+el.dataset.i,1); if(!draft.items.length) draft.items.push({desc:'',qty:1,rate:0}); $('#items').innerHTML=itemRows(); updateTotals(); },
+  'edit-client': id => {
+    const c = client(id);
+    const name = prompt('Client name', c.name); if(name===null) return;
+    const email = prompt('Email', c.email); if(email===null) return;
+    const address = prompt('Address', c.address); if(address===null) return;
+    Object.assign(c,{name:name.trim()||c.name,email,address}); save(); render();
+  },
+  'del-client': id => {
+    const used = db.invoices.filter(i=>i.clientId===id).length;
+    if(confirm(used ? `This client has ${used} invoice(s). They will keep their data but show no client. Delete?` : 'Delete this client?')){
+      db.clients = db.clients.filter(c=>c.id!==id); save(); render(); }
+  },
+  'del-exp': id => { db.expenses = db.expenses.filter(e=>e.id!==id); save(); render(); },
+  'csv-exp': () => download(`expenses-${expYear}.csv`, csv([['Date','Category','Description','Amount'],
+      ...db.expenses.filter(e=>(e.date||'').startsWith(expYear)).sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.category,e.desc,num(e.amount).toFixed(2)])]), 'text/csv'),
+  'csv-inv': () => download('invoices.csv', csv([['Number','Client','Issued','Due','Status','Currency','Subtotal','Discount','Tax','Total'],
+      ...db.invoices.map(i=>{ const t=totals(i); return [i.number, client(i.clientId)?.name||'', i.issue, i.due, status(i), i.currency, t.sub.toFixed(2), t.disc.toFixed(2), t.tax.toFixed(2), t.total.toFixed(2)]; })]), 'text/csv'),
+  'backup': () => download(`invoice-kit-backup-${today()}.json`, JSON.stringify(db,null,2), 'application/json'),
+  'restore': () => $('#restore-file').click(),
+  'reset': () => { if(confirm('Erase ALL invoices, clients, expenses and settings? This cannot be undone.')){ db=clone(DEFAULTS); save(); go('dashboard'); } },
+  'rm-logo': () => { db.settings.logo=''; save(); render(); },
+  'demo': loadDemo
+};
+
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if(g){ go(g.dataset.go); return; }
+  const v = e.target.closest('#nav [data-view]'); if(v){ go(v.dataset.view); return; }
+  const a = e.target.closest('[data-act]'); if(a){ e.preventDefault(); actions[a.dataset.act](a.dataset.id, a); }
+});
+
+document.addEventListener('input', e => {
+  if(view!=='editor' || !draft) return;
+  const el = e.target;
+  if(el.dataset.f){ draft[el.dataset.f] = el.value; updateTotals(); }
+  else if(el.dataset.k){ draft.items[+el.dataset.i][el.dataset.k] = el.value; updateTotals(); }
+});
+
+document.addEventListener('change', e => {
+  const el = e.target;
+  if(el.id==='exp-year'){ expYear = el.value; render(); }
+  if(el.id==='logo' && el.files[0]){
+    const f = el.files[0];
+    if(f.size > 300*1024) return toast('Logo must be under 300 KB.');
+    const r = new FileReader(); r.onload = () => { db.settings.logo = r.result; save(); render(); toast('Logo saved.'); }; r.readAsDataURL(f);
+  }
+  if(el.id==='restore-file' && el.files[0]){
+    const r = new FileReader();
+    r.onload = () => { try{
+        const d = JSON.parse(r.result);
+        if(!d || !Array.isArray(d.invoices) || !d.settings) throw 0;
+        if(!confirm('Replace all current data with this backup?')) return;
+        db = {...clone(DEFAULTS), ...d, settings:{...DEFAULTS.settings, ...d.settings}}; save(); go('dashboard'); toast('Backup restored.');
+      }catch(err){ toast('That file is not a valid backup.'); } };
+    r.readAsText(el.files[0]);
+  }
+});
+
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const fd = Object.fromEntries(new FormData(e.target));
+  if(e.target.id==='client-form'){ db.clients.push({id:uid(), name:fd.name.trim(), email:fd.email, address:fd.address}); save(); render(); toast('Client added.'); }
+  if(e.target.id==='exp-form'){ db.expenses.push({id:uid(), date:fd.date, category:fd.category.trim()||'Other', desc:fd.desc, amount:num(fd.amount)}); expYear=fd.date.slice(0,4); save(); render(); toast('Expense added.'); }
+  if(e.target.id==='settings-form'){
+    for(const k of ['taxRate','nextNo','terms']) fd[k] = num(fd[k]);
+    fd.currency = (fd.currency||'USD').toUpperCase().trim();
+    Object.assign(db.settings, fd); save(); toast('Settings saved.');
+  }
+});
+
+function loadDemo(){
+  if(db.invoices.length && !confirm('Add sample data alongside your existing data?')) return;
+  const y = new Date().getFullYear(), d = (m,dd) => `${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+  Object.assign(db.settings, {name: db.settings.name || 'Alex Rivera Design', email: db.settings.email || 'hello@example.com',
+    address: db.settings.address || '12 Example Street\nSpringfield', payment: db.settings.payment || 'Bank transfer — Acct 0000 0000 (sample)'});
+  const c1={id:uid(),name:'Northwind Studio',email:'billing@northwind.example',address:'400 Market Ave\nMetro City'};
+  const c2={id:uid(),name:'Bluebird Café',email:'owner@bluebird.example',address:'8 Harbour Rd'};
+  db.clients.push(c1,c2);
+  const mk = (n,c,iss,due,st,items) => ({id:uid(),number:db.settings.prefix+String(n).padStart(4,'0'),clientId:c.id,issue:iss,due,
+    items,taxRate:db.settings.taxRate,discount:0,notes:db.settings.notes,status:st,currency:db.settings.currency});
+  const n = num(db.settings.nextNo);
+  db.invoices.push(
+    mk(n,c1,d(1,10),d(1,24),'paid',[{desc:'Brand identity package',qty:1,rate:1800}]),
+    mk(n+1,c2,d(2,3),d(2,17),'paid',[{desc:'Menu design',qty:1,rate:450},{desc:'Print-ready revisions (hours)',qty:3,rate:60}]),
+    mk(n+2,c1,addDays(today(),-30),addDays(today(),-16),'sent',[{desc:'Website mockups',qty:5,rate:220}]),
+    mk(n+3,c2,today(),addDays(today(),14),'draft',[{desc:'Social media templates',qty:10,rate:35}]));
+  db.settings.nextNo = n+4;
+  db.expenses.push({id:uid(),date:d(1,5),category:'Software',desc:'Design software subscription',amount:59.99},
+    {id:uid(),date:d(1,18),category:'Hardware',desc:'Drawing tablet',amount:249},
+    {id:uid(),date:d(2,9),category:'Education',desc:'Online typography course',amount:89});
+  save(); render(); toast('Sample data loaded.');
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+FREELANCER INVOICE & EXPENSE KIT: END USER LICENSE
+
+Copyright (c) YEAR YOUR NAME. All rights reserved.
+
+By purchasing, you (the "Buyer") receive a non-exclusive, non-transferable
+license to use this software, subject to the following terms.
+
+YOU MAY:
+  - Use the software to run your own business or personal finances,
+    including commercial work, with no limit on invoices or clients.
+  - Install it on any devices you personally own or use.
+  - Modify the file for your own use.
+
+YOU MAY NOT:
+  - Resell, share, sublicense, give away, or publicly host the software
+    or any modified version of it.
+  - Include it in a product, template bundle, or service offered to others.
+  - Remove this copyright notice.
+
+NO WARRANTY: The software is provided "as is", without warranty of any kind.
+The author is not liable for any loss of data or other damages arising
+from its use. You are responsible for keeping backups of your data. The
+software does not provide tax, legal, or accounting advice.
+
+Questions: YOUR_EMAIL
